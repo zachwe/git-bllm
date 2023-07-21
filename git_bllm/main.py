@@ -5,6 +5,7 @@ import openai
 from rich.live import Live
 from rich.console import Console
 from rich.prompt import Prompt
+from rich.markdown import Markdown
 import os
 
 console = Console()
@@ -16,7 +17,16 @@ def explain_diff(diff):
     # Explain the diff
     global openai_api_key
     if openai_api_key is None:
-        openai_api_key = Prompt.ask("Please enter your OpenAI API key")
+        cache_dir = os.path.expanduser("~/.cache/git-bllm")
+        if os.path.exists(cache_dir) and os.path.isfile(os.path.join(cache_dir, "openai_api_key")):
+            with open(os.path.join(cache_dir, "openai_api_key")) as f:
+                openai_api_key = f.read().strip()
+        else:
+            openai_api_key = Prompt.ask("Please enter your OpenAI API key")
+            if not os.path.exists(cache_dir):
+                os.makedirs(cache_dir)
+            with open(os.path.join(cache_dir, "openai_api_key"), "w") as f:
+                f.write(openai_api_key)
     openai.api_key = openai_api_key
     response = openai.ChatCompletion.create(
         model="gpt-4",
@@ -31,7 +41,8 @@ def explain_diff(diff):
         for resp in response:
             delta = resp.choices[0].delta
             full_result += delta.get("content", "")
-            live.update(full_result)
+            md = Markdown(full_result)
+            live.update(md)
 
 
 def handle_commit_hash(commit_hash):
