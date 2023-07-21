@@ -4,7 +4,7 @@ Explain Git commits with GPT4
 
 # Install
 
-`pip install https://github.com/zachwe/git-bllm.git`
+`pip install git+https://github.com/zachwe/git-bllm.git`
 
 # Use
 
